@@ -1,0 +1,16 @@
+# Tiny smoke test (~1-2 min on a laptop, no GPU, no model download):
+#   snakemake -s workflow/Snakefile --configfile config/smoke.yaml --cores 4
+sim:
+  n_taxa: [16]
+  tree_heights: [0.5, 2.0]
+  replicates: 5
+  rate_sigma: 0.3
+  length: 200
+  model: "LG+G4{0.6}"
+  indel_rates: "0.03,0.09"
+  indel_size: "POW{1.7/50},POW{1.7/50}"
+  tuning_seed_offset: 100000
+embedding:
+  models: ["onehot"]
+  layer: -1
+  device: cpu

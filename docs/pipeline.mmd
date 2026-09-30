@@ -1,0 +1,29 @@
+flowchart LR
+    subgraph SIM["Simulation (known truth)"]
+        T["Yule tree + rate heterogeneity<br/>sim_tree.py"] --> A["AliSim LG+G4 + indels<br/>true MSA"]
+        A --> U["degap → unaligned FASTA"]
+    end
+    U --> M["MAFFT"]
+    U --> E["PLM residue embeddings<br/>ESM-2 / one-hot control"]
+    U --> K["3-mer counts"]
+
+    E --> MP["mean-pool<br/>cosine"]
+    E --> PEA["<b>PEA (tested)</b><br/>cos-sim matrix → z-score →<br/>affine-gap DP per pair →<br/>mean(1−cos) of matched residues"]
+    E --> RM["residue dist. via MAFFT MSA"]
+    A --> RT["residue dist. via TRUE MSA"]
+    M --> RM
+    M --> IQ["IQ-TREE LG+G4<br/>ML tree + BIONJ(ML dist.)"]
+
+    MP --> NJ["Neighbour joining"]
+    PEA --> NJ
+    RM --> NJ
+    RT --> NJ
+    K --> NJ
+
+    NJ --> C["compare with true tree<br/>nRF, quartet distance, runtime"]
+    IQ --> C
+    T -. reference .-> C
+    C --> ST["Wilcoxon (Holm), Spearman<br/>figures"]
+
+    classDef tested fill:#e9d5ff,stroke:#7c3aed,stroke-width:2px;
+    class PEA tested;

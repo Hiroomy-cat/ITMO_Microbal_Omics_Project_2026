@@ -1,0 +1,51 @@
+# ============================================================================
+# MSA-free phylogeny from residue-level PLM embeddings — pipeline configuration
+# ============================================================================
+seed: 20261001
+
+# --- executables -------------------------------------------------------------
+iqtree_bin: iqtree3          # conda's iqtree>=2.2 now resolves to IQ-TREE 3 (binary "iqtree3"); use "iqtree2" for IQ-TREE 2.x
+mafft_bin: mafft
+
+# --- simulation grid (AliSim) --------------------------------------------------
+sim:
+  n_taxa: [16, 32]
+  tree_heights: [0.25, 0.5, 1.0, 2.0, 4.0]   # mean root-to-tip, subs/site (divergence axis for H1b)
+  replicates: 20                              # per cell; raise to 50 for the final run
+  rate_sigma: 0.3                             # lognormal per-branch rate heterogeneity
+  length: 300                                 # root sequence length (aa)
+  model: "LG+G4{0.6}"
+  indel_rates: "0.03,0.09"                    # insertion,deletion relative to substitutions
+  indel_size: "POW{1.7/50},POW{1.7/50}"       # Zipf a=1.7, max 50 aa
+  # A separate TUNING set (different seed offset) is used to choose PEA gap
+  # penalties. Never tune on the test datasets.
+  tuning_seed_offset: 100000
+
+# --- embeddings ----------------------------------------------------------------
+embedding:
+  # "onehot" is a mandatory CONTROL: PEA/msaresid with one-hot == classical identity distance.
+  models: ["onehot", "esm2_t12_35M_UR50D"]
+  layer: -1                                   # -1 = last layer
+  device: auto                                # auto | cpu | cuda
+
+# --- method parameters ---------------------------------------------------------
+pea:
+  gap_open: 2.0
+  gap_extend: 0.5
+  zscore: true            # EBA-style signal enhancement of the similarity matrix
+  free_end_gaps: true
+  gap_weight: 0.0         # weight of the unmatched-residue fraction added to the distance
+
+meanpool:
+  metric: cosine
+
+kmer:
+  k: 3
+
+iqtree:
+  model: "LG+G4"          # matches the simulating model family (favours ML = fair upper bound)
+  extra: "-T 1"
+
+compare:
+  quartets: true          # normalised quartet distance (slow for n > 40)
+  primary_metric: nRF

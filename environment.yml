@@ -1,0 +1,18 @@
+name: msafree-phylo
+channels: [conda-forge, bioconda, nodefaults]
+dependencies:
+  - python=3.11
+  - snakemake>=8
+  - iqtree>=2.2          # provides `iqtree2` (AliSim + ML)
+  - mafft
+  - numpy
+  - numba
+  - scipy
+  - pandas
+  - matplotlib
+  - pytest
+  - pytorch               # CPU build is enough for ESM-2 8M/35M; install CUDA build for GPU
+  - pip
+  - pip:
+      - fair-esm          # ESM-2. NB: EvolutionaryScale's `esm` (ESM-C) uses the SAME import
+                          # name -> put ESM-C into a separate env (see README).

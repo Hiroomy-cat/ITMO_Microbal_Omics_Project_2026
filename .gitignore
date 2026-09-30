@@ -1,0 +1,11 @@
+data/sim/
+data/emb/
+results/
+benchmarks/
+logs/
+.snakemake/
+__pycache__/
+.pytest_cache/
+*.ckp.gz
+# keep final figures/tables for the defence by force-adding them:
+#   git add -f results/figures/*.pdf results/stats/tests.tsv results/summary.tsv

@@ -1,0 +1,203 @@
+# =============================================================================
+# MSA-free phylogeny from residue-level PLM embeddings
+#   simulate -> (degap | MAFFT) -> embed -> distances -> NJ / ML -> compare -> stats
+# Run:  snakemake -s workflow/Snakefile --cores 8 --use-conda   (or inside the env)
+# =============================================================================
+import re
+
+configfile: "config/config.yaml"
+
+S = config["sim"]
+EMB_MODELS = config["embedding"]["models"]
+EMB_METHODS = ["meanpool", "pea", "msaresid_mafft", "msaresid_true"]
+OTHER_METHODS = ["ml", "bionj", "kmer"]
+SCRIPTS = "workflow/scripts"
+
+
+def fmt_h(h):
+    return f"{float(h):g}"
+
+
+DATASETS = [f"n{n}_h{fmt_h(h)}_r{r}"
+            for n in S["n_taxa"] for h in S["tree_heights"] for r in range(S["replicates"])]
+DS_INDEX = {d: i for i, d in enumerate(DATASETS)}
+
+wildcard_constraints:
+    ds=r"n\d+_h[\d.]+_r\d+",
+    model=r"[A-Za-z0-9_]+",
+
+
+def ds_param(ds, what):
+    n, h, r = re.match(r"n(\d+)_h([\d.]+)_r(\d+)", ds).groups()
+    return {"n": int(n), "h": float(h), "r": int(r)}[what]
+
+
+def trees_for(ds):
+    t = [f"results/trees/{ds}/{m}__{mo}.nwk" for m in EMB_METHODS for mo in EMB_MODELS]
+    t += [f"results/trees/{ds}/{m}__none.nwk" for m in OTHER_METHODS]
+    return t
+
+
+rule all:
+    input:
+        "results/summary.tsv",
+        "results/stats/tests.tsv",
+        "results/figures/fig1_accuracy_vs_divergence.pdf",
+
+
+# ----------------------------------------------------------------------------- simulation
+rule sim_tree:
+    output: "data/sim/{ds}/true.nwk"
+    params:
+        n=lambda w: ds_param(w.ds, "n"),
+        h=lambda w: ds_param(w.ds, "h"),
+        seed=lambda w: config["seed"] + DS_INDEX[w.ds],
+    shell:
+        "python {SCRIPTS}/sim_tree.py --n {params.n} --height {params.h} "
+        "--rate-sigma {S[rate_sigma]} --seed {params.seed} --out {output}"
+
+
+rule alisim:
+    input: "data/sim/{ds}/true.nwk"
+    output: "data/sim/{ds}/true_aln.fa"
+    log: "logs/alisim/{ds}.log"
+    params:
+        prefix="data/sim/{ds}/alisim",
+        seed=lambda w: config["seed"] + DS_INDEX[w.ds],
+    shell:
+        """
+        {config[iqtree_bin]} --alisim {params.prefix} -t {input} -m '{S[model]}' \
+            --length {S[length]} --indel {S[indel_rates]} --indel-size '{S[indel_size]}' \
+            --seed {params.seed} -af fasta -redo > {log} 2>&1
+        mv {params.prefix}.fa {output}
+        rm -f {params.prefix}.unaligned.fa
+        """
+
+
+rule degap:
+    input: "data/sim/{ds}/true_aln.fa"
+    output: "data/sim/{ds}/unaligned.fa"
+    shell: "python {SCRIPTS}/degap.py {input} {output}"
+
+
+rule mafft:
+    input: "data/sim/{ds}/unaligned.fa"
+    output: "data/sim/{ds}/mafft.fa"
+    benchmark: "benchmarks/{ds}/mafft.tsv"
+    log: "logs/mafft/{ds}.log"
+    shell: "{config[mafft_bin]} --auto --quiet --anysymbol {input} > {output} 2> {log}"
+
+
+# ----------------------------------------------------------------------------- embeddings
+rule embed:
+    input: "data/sim/{ds}/unaligned.fa"
+    output: "data/emb/{ds}/{model}.npz"
+    benchmark: "benchmarks/{ds}/embed__{model}.tsv"
+    resources: gpu=lambda w: 0 if w.model == "onehot" else 1
+    params: layer=config["embedding"]["layer"], device=config["embedding"]["device"]
+    shell:
+        "python {SCRIPTS}/embed.py --fasta {input} --model {wildcards.model} "
+        "--layer {params.layer} --device {params.device} --out {output}"
+
+
+# ----------------------------------------------------------------------------- distances
+P = config["pea"]
+
+rule dist_pea:
+    input: "data/emb/{ds}/{model}.npz"
+    output: "results/dist/{ds}/pea__{model}.tsv"
+    benchmark: "benchmarks/{ds}/dist_pea__{model}.tsv"
+    params:
+        flags=("" if P["zscore"] else "--no-zscore ") + ("" if P["free_end_gaps"] else "--global-ends"),
+    shell:
+        "python {SCRIPTS}/dist_emb.py --emb {input} --method pea "
+        "--gap-open {P[gap_open]} --gap-extend {P[gap_extend]} --gap-weight {P[gap_weight]} "
+        "{params.flags} --out {output}"
+
+
+rule dist_meanpool:
+    input: "data/emb/{ds}/{model}.npz"
+    output: "results/dist/{ds}/meanpool__{model}.tsv"
+    benchmark: "benchmarks/{ds}/dist_meanpool__{model}.tsv"
+    shell:
+        "python {SCRIPTS}/dist_emb.py --emb {input} --method meanpool "
+        "--metric {config[meanpool][metric]} --out {output}"
+
+
+rule dist_msaresid:
+    input:
+        emb="data/emb/{ds}/{model}.npz",
+        aln=lambda w: f"data/sim/{w.ds}/{'true_aln' if w.aln == 'true' else 'mafft'}.fa",
+    output: "results/dist/{ds}/msaresid_{aln}__{model}.tsv"
+    wildcard_constraints: aln="true|mafft"
+    benchmark: "benchmarks/{ds}/dist_msaresid_{aln}__{model}.tsv"
+    shell:
+        "python {SCRIPTS}/dist_emb.py --emb {input.emb} --method msaresid "
+        "--aln {input.aln} --out {output}"
+
+
+rule dist_kmer:
+    input: "data/sim/{ds}/unaligned.fa"
+    output: "results/dist/{ds}/kmer__none.tsv"
+    benchmark: "benchmarks/{ds}/dist_kmer__none.tsv"
+    shell: "python {SCRIPTS}/dist_kmer.py --fasta {input} --k {config[kmer][k]} --out {output}"
+
+
+# ----------------------------------------------------------------------------- trees
+rule nj:
+    input: "results/dist/{ds}/{method}__{model}.tsv"
+    output: "results/trees/{ds}/{method}__{model}.nwk"
+    wildcard_constraints: method="meanpool|pea|msaresid_mafft|msaresid_true|kmer"
+    log: "logs/nj/{ds}/{method}__{model}.log"
+    shell: "python {SCRIPTS}/nj.py {input} {output} 2> {log}"
+
+
+rule iqtree:
+    input: "data/sim/{ds}/mafft.fa"
+    output:
+        ml="results/iqtree/{ds}/ml.treefile",
+        bionj="results/iqtree/{ds}/ml.bionj",
+    benchmark: "benchmarks/{ds}/iqtree.tsv"
+    params: prefix="results/iqtree/{ds}/ml", seed=lambda w: config["seed"] + DS_INDEX[w.ds]
+    shell:
+        "{config[iqtree_bin]} -s {input} -m {config[iqtree][model]} {config[iqtree][extra]} "
+        "--seed {params.seed} --prefix {params.prefix} -redo --quiet"
+
+
+rule collect_ml:
+    input: "results/iqtree/{ds}/ml.treefile"
+    output: "results/trees/{ds}/ml__none.nwk"
+    shell: "cp {input} {output}"
+
+rule collect_bionj:
+    input: "results/iqtree/{ds}/ml.bionj"
+    output: "results/trees/{ds}/bionj__none.nwk"
+    shell: "cp {input} {output}"
+
+
+# ----------------------------------------------------------------------------- evaluation
+rule compare:
+    input:
+        ref="data/sim/{ds}/true.nwk",
+        trees=lambda w: trees_for(w.ds),
+    output: "results/metrics/{ds}.tsv"
+    params: q="--quartets" if config["compare"]["quartets"] else ""
+    shell:
+        "python {SCRIPTS}/compare.py --dataset {wildcards.ds} --ref {input.ref} "
+        "--trees {input.trees} {params.q} --out {output}"
+
+
+rule aggregate:
+    input: expand("results/metrics/{ds}.tsv", ds=DATASETS)
+    output: "results/summary.tsv"
+    shell: "python {SCRIPTS}/aggregate.py --metrics {input} --bench-dir benchmarks --out {output}"
+
+
+rule stats:
+    input: "results/summary.tsv"
+    output:
+        tests="results/stats/tests.tsv",
+        fig1="results/figures/fig1_accuracy_vs_divergence.pdf",
+    shell:
+        "python {SCRIPTS}/stats_plots.py --summary {input} "
+        "--metric {config[compare][primary_metric]} --stats-out {output.tests} --fig-dir results/figures"
