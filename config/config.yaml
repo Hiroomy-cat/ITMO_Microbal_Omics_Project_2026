@@ -44,7 +44,7 @@ kmer:
 
 iqtree:
   model: "LG+G4"          # matches the simulating model family (favours ML = fair upper bound)
-  extra: "-T 1"
+  extra: "-T 1 -keep-ident"   # keep identical seqs: otherwise .bionj drops them (low divergence)
 
 compare:
   quartets: true          # normalised quartet distance (slow for n > 40)

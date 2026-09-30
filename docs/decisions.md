@@ -20,3 +20,7 @@ Format: date — decision — why.
   scale that is comparable across pairs.
 - 2026-09-30 — Metrics: normalised RF (primary), normalised quartet distance (secondary). —
   Quartets are less sensitive to a single misplaced taxon.
+- 2026-09-30 — IQ-TREE runs with `-keep-ident`. — At low divergence (h = 0.25) AliSim produces
+  identical sequences; by default IQ-TREE drops them and re-adds them only to `.treefile`, so the
+  `.bionj` tree missed taxa (n16_h0.25_r17: 14/16) and `compare` failed. Keeping them makes ML and
+  BIONJ trees contain all taxa and treats every dataset the same; finished ML runs are recomputed.
