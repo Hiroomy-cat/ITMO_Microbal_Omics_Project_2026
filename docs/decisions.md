@@ -56,3 +56,29 @@ Format: date — decision — why.
   within ~0.01 nRF of each other, so the exact winner is partly selection noise; (5) layer 4 is
   the lower edge of the tested range, so earlier layers might be better still — **not** explored,
   to avoid open-ended tuning (limitation); (6) on the tuning set tuned ESM-2 ≈ tuned one-hot.
+- 2026-10-07 — **POST-HOC ablation (explanation, NOT tuning): PEA with gap_weight = 0.** —
+  On the test grid tuned PEA beat MSA-based methods at h = 4 (mean nRF: PEA one-hot 0.396,
+  PEA ESM-2 0.439, msaresid TRUE one-hot 0.489, ML 0.559). Question: how much of this comes from
+  the indel term (gap_weight × unmatched fraction), which no MSA-residue method has? Recompute PEA
+  on the main grid with all frozen settings except gap_weight = 0 (`workflow/ablation.smk`,
+  outputs in `results_ablation/`, main `results/` untouched) and compare nRF at h = 2 and h = 4 with
+  the main PEA and msaresid TRUE. Note: the frozen ESM-2 setting already has gap_weight = 0, so for
+  ESM-2 the ablation must reproduce the main PEA exactly (a reproducibility check); only one-hot
+  changes. The ablation result is descriptive and does not change any frozen parameter.
+- 2026-10-07 — **POST-HOC ablation result** (`results_ablation/ablation_gw0.tsv`; 40 datasets per
+  height; paired differences, 95 % bootstrap CI; descriptive, no tests, nothing re-tuned). —
+  - ESM-2: gap_weight = 0 reproduces the main PEA exactly (max |ΔnRF| = 0 at h = 2 and 4) —
+    reproducibility check passed.
+  - one-hot: removing the indel term worsens PEA by ΔnRF +0.055 [0.035, 0.075] at h = 2 and
+    +0.098 [0.066, 0.129] at h = 4. Without it, PEA one-hot at h = 4 equals the TRUE-MSA identity
+    distance (0.494 vs msaresid TRUE 0.489; Δ +0.005 [−0.041, 0.050]); with it, PEA was better
+    (Δ −0.093 [−0.140, −0.044]).
+  - ESM-2 PEA is worse than msaresid TRUE with ESM-2 at both heights (h = 4: 0.439 vs 0.360;
+    Δ +0.079 [0.042, 0.120]).
+  Interpretation: one-hot PEA's advantage over MSA-residue distances at high divergence comes
+  from the gap_weight × unmatched-fraction term, i.e. from indel information that the
+  MSA-residue distance (matched columns only) discards — not from better residue matching.
+  ESM-2 PEA does not exceed its own MSA upper bound; its lead over IQ-TREE ML at h = 4 reflects
+  ML degrading on MAFFT alignments (msaresid TRUE ESM-2 also beats ML there). Limitation: the
+  MSA-based baselines get no comparable indel term, so the PEA vs msaresid comparison is not
+  like-for-like at high divergence.

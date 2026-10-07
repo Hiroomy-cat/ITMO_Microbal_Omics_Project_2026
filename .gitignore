@@ -13,3 +13,6 @@ data_tuning/
 results_tuning/
 benchmarks_tuning/
 logs_tuning/
+results_ablation/
+benchmarks_ablation/
+logs_ablation/
