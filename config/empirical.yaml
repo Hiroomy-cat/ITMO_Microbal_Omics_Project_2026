@@ -1,0 +1,24 @@
+# Empirical check (Phase 3, reduced) — used by workflow/empirical.smk on top of config/config.yaml.
+# Method settings are NOT here on purpose: the frozen ones from config.yaml are used unchanged.
+empirical:
+  families:                       # family name -> UniProt gene name
+    recA: recA
+    rpsC: rpsC
+  phyla:                          # NCBI phylum name -> taxid (Mycoplasmatota excluded, see decisions.md)
+    Pseudomonadota: 1224
+    Bacillota: 1239
+    Actinomycetota: 201174
+    Cyanobacteriota: 1117
+    Spirochaetota: 203691
+    Chlamydiota: 204428
+    Campylobacterota: 29547
+  per_phylum: 6
+  ranks: [phylum, class, order]
+  reference:
+    iqtree_model: MFP
+    ufboot: 1000
+    min_support: 95               # only reference splits with UFBoot >= this are used
+  robustness:
+    replicates: 200
+    per_phylum: 4
+  sensitivity_drop_phylum: Chlamydiota   # totals are also reported without this phylum's groups

@@ -1,0 +1,44 @@
+# UniProt release 2026_03; reviewed entries in reference proteomes (KW-1185)
+taxon	phylum	class	order	species	organism	organism_id	acc_recA	acc_rpsC
+s01	Pseudomonadota	Alphaproteobacteria	Acetobacterales	Gluconobacter oxydans	Gluconobacter oxydans (strain 621H) (Gluconobacter suboxydans)	290633	P48289	Q5FTY9
+s02	Pseudomonadota	Betaproteobacteria	Burkholderiales	Herminiimonas arsenicoxydans	Herminiimonas arsenicoxydans	204773	A4G8B3	A4G9T2
+s03	Pseudomonadota	Gammaproteobacteria	Aeromonadales	Aeromonas hydrophila	Aeromonas hydrophila subsp. hydrophila (strain ATCC 7966 / DSM 30187 / BCRC 13018 / CCUG 14551 / JCM 1027 / KCTC 2358 / NCIMB 9240 / NCTC 8049)	380703	A0KPG3	A0KF27
+s04	Pseudomonadota	Alphaproteobacteria	Caulobacterales	Caulobacter vibrioides	Caulobacter vibrioides (strain ATCC 19089 / CIP 103742 / CB 15) (Caulobacter crescentus)	190650	Q9A9A7	Q9A8U7
+s05	Pseudomonadota	Betaproteobacteria	Neisseriales	Neisseria meningitidis	Neisseria meningitidis serogroup B (strain ATCC BAA-335 / MC58)	122586	P0DH59	P66551
+s06	Pseudomonadota	Gammaproteobacteria	Alteromonadales	Colwellia psychrerythraea	Colwellia psychrerythraea (strain 34H / ATCC BAA-681) (Vibrio psychroerythus)	167879	Q47WN3	Q487Z9
+s07	Bacillota	Bacilli	Caryophanales	Bacillus anthracis	Bacillus anthracis	1392	Q9APZ2	Q81VS4
+s08	Bacillota	Clostridia	Eubacteriales	Clostridium perfringens	Clostridium perfringens (strain ATCC 13124 / DSM 756 / JCM 1290 / NCIMB 6125 / NCTC 8237 / Type A)	195103	Q0TPT0	Q0TMQ2
+s09	Bacillota	Bacilli	Lactobacillales	Streptococcus pneumoniae	Streptococcus pneumoniae serotype 4 (strain ATCC BAA-334 / TIGR4)	170187	P0A451	P0A4C3
+s10	Bacillota	Clostridia	Peptostreptococcales	Clostridioides difficile	Clostridioides difficile (strain 630) (Peptoclostridium difficile)	272563	Q18BJ4	Q18CG5
+s11	Bacillota	Bacilli	Caryophanales	Shouchella clausii	Shouchella clausii (strain KSM-K16) (Alkalihalobacillus clausii)	66692	Q5WFX1	Q5WLQ6
+s12	Bacillota	Clostridia	Thermoanaerobacterales	Caldanaerobacter subterraneus	Caldanaerobacter subterraneus subsp. tengcongensis (strain DSM 15242 / JCM 11007 / NBRC 100824 / MB4) (Thermoanaerobacter tengcongensis)	273068	Q8RA55	Q8R7W0
+s13	Actinomycetota	Actinomycetes	Acidothermales	Acidothermus cellulolyticus	Acidothermus cellulolyticus (strain ATCC 43068 / DSM 8971 / 11B)	351607	A0LV04	A0LRM6
+s14	Actinomycetota	Rubrobacteria	Rubrobacterales	Rubrobacter xylanophilus	Rubrobacter xylanophilus (strain DSM 9941 / JCM 11954 / NBRC 16129 / PRD-1)	266117	Q1AW43	Q1AU35
+s15	Actinomycetota	Actinomycetes	Bifidobacteriales	Bifidobacterium longum	Bifidobacterium longum (strain NCC 2705)	206672	Q8G4G9	P59179
+s16	Actinomycetota	Actinomycetes	Frankiales	Frankia casuarinae	Frankia casuarinae (strain DSM 45818 / CECT 9043 / HFP020203 / CcI3)	106370	Q2J764	Q2JFH0
+s17	Actinomycetota	Actinomycetes	Kineosporiales	Kineococcus radiotolerans	Kineococcus radiotolerans (strain ATCC BAA-149 / DSM 14245 / SRS30216)	266940	A6W841	A6W5U4
+s18	Actinomycetota	Actinomycetes	Kitasatosporales	Streptomyces coelicolor	Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145)	100226	O50487	Q9L0D4
+s19	Cyanobacteriota	Cyanophyceae	Acaryochloridales	Thermosynechococcus vestitus	Thermosynechococcus vestitus (strain NIES-2133 / IAM M-273 / BP-1)	197221	Q8DH70	P59187
+s20	Cyanobacteriota	Cyanophyceae	Chroococcales	Rippkaea orientalis	Rippkaea orientalis (strain PCC 8801 / RF-1) (Cyanothece sp. (strain PCC 8801))	41431	B7JZS9	B7K329
+s21	Cyanobacteriota	Cyanophyceae	Gloeobacterales	Gloeobacter violaceus	Gloeobacter violaceus (strain ATCC 29082 / PCC 7421)	251221	Q7NFV8	Q7NEF8
+s22	Cyanobacteriota	Cyanophyceae	Nostocales	Nostoc punctiforme	Nostoc punctiforme (strain ATCC 29133 / PCC 73102)	63737	B2IWJ2	B2ITP9
+s23	Cyanobacteriota	Cyanophyceae	Synechococcales	Synechococcus elongatus	Synechococcus elongatus (strain ATCC 33912 / PCC 7942 / FACHB-805) (Anacystis nidulans R2)	1140	Q31RD9	Q31L13
+s24	Cyanobacteriota	Cyanophyceae	Chroococcales	Crocosphaera subtropica	Crocosphaera subtropica (strain ATCC 51142 / BH68) (Cyanothece sp. (strain ATCC 51142))	43989	B1WW59	B1WQR6
+s25	Spirochaetota	Leptospiria	Leptospirales	Leptospira interrogans	Leptospira interrogans serogroup Icterohaemorrhagiae serovar Lai (strain 56601)	189518	P52277	Q9XD30
+s26	Spirochaetota	Spirochaetia	Spirochaetales	Borreliella burgdorferi	Borreliella burgdorferi (strain ATCC 35210 / DSM 4680 / CIP 102532 / B31) (Borrelia burgdorferi)	224326	Q59180	P94273
+s27	Spirochaetota	Leptospiria	Leptospirales	Leptospira biflexa	Leptospira biflexa serovar Patoc (strain Patoc 1 / ATCC 23582 / Paris)	456481	B0SLE9	B0SSH1
+s28	Spirochaetota	Spirochaetia	Treponematales	Treponema denticola	Treponema denticola (strain ATCC 35405 / DSM 14222 / CIP 103919 / JCM 8153 / KCTC 15104)	243275	P62221	Q73PM6
+s29	Spirochaetota	Spirochaetia	Spirochaetales	Borrelia turicatae	Borrelia turicatae (strain 91E135)	314724	A1QYT1	A1QZS0
+s30	Spirochaetota	Spirochaetia	Treponematales	Treponema pallidum	Treponema pallidum (strain DSM 117211 / Nichols)	243276	O83690	O83225
+s31	Chlamydiota	Chlamydiia	Chlamydiales	Chlamydia pneumoniae	Chlamydia pneumoniae (Chlamydophila pneumoniae)	83558	Q9Z7E4	Q9Z7R3
+s32	Chlamydiota	Chlamydiia	Chlamydiales	Chlamydia abortus	Chlamydia abortus (strain DSM 27085 / S26/3) (Chlamydophila abortus)	218497	Q5L4P3	Q5L714
+s33	Chlamydiota	Chlamydiia	Chlamydiales	Chlamydia caviae	Chlamydia caviae (strain ATCC VR-813 / DSM 19441 / 03DC25 / GPIC) (Chlamydophila caviae)	227941	Q821E6	Q824P5
+s34	Chlamydiota	Chlamydiia	Chlamydiales	Chlamydia muridarum	Chlamydia muridarum (strain MoPn / Nigg)	243161	Q9PLS6	Q9PJM0
+s35	Chlamydiota	Chlamydiia	Chlamydiales	Chlamydia felis	Chlamydia felis (strain Fe/C-56) (Chlamydophila felis)	264202	Q256J8	Q252V9
+s36	Chlamydiota	Chlamydiia	Chlamydiales	Chlamydia trachomatis	Chlamydia trachomatis serovar D (strain ATCC VR-885 / DSM 19411 / UW-3/Cx)	272561	P0CD80	O84527
+s37	Campylobacterota	Epsilonproteobacteria	Campylobacterales	Helicobacter pylori	Helicobacter pylori (strain ATCC 700392 / 26695) (Campylobacter pylori)	85962	P42445	P56010
+s38	Campylobacterota	Epsilonproteobacteria	Nautiliales	Nautilia profundicola	Nautilia profundicola (strain ATCC BAA-1463 / DSM 18972 / AmH)	598659	B9L7U2	B9L6M7
+s39	Campylobacterota	Epsilonproteobacteria	Campylobacterales	Campylobacter jejuni	Campylobacter jejuni subsp. jejuni serotype O:2 (strain ATCC 700819 / NCTC 11168)	192222	Q0P7V6	Q9PLX7
+s40	Campylobacterota	Epsilonproteobacteria	Campylobacterales	Helicobacter hepaticus	Helicobacter hepaticus (strain ATCC 51449 / 3B1)	235279	Q7VIH2	Q7VGD8
+s41	Campylobacterota	Epsilonproteobacteria	Campylobacterales	Wolinella succinogenes	Wolinella succinogenes (strain ATCC 29543 / DSM 1740 / CCUG 13145 / JCM 31913 / LMG 7466 / NCTC 11488 / FDC 602W) (Vibrio succinogenes)	273121	Q7M8Q1	Q7M8E0
+s42	Campylobacterota	Epsilonproteobacteria	Campylobacterales	Campylobacter lari	Campylobacter lari (strain RM2100 / D67 / ATCC BAA-1060)	306263	B9KEN1	B9KEE6
