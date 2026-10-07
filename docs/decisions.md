@@ -82,3 +82,49 @@ Format: date — decision — why.
   ML degrading on MAFFT alignments (msaresid TRUE ESM-2 also beats ML there). Limitation: the
   MSA-based baselines get no comparable indel term, so the PEA vs msaresid comparison is not
   like-for-like at high divergence.
+- 2026-10-07 — **Empirical check protocol (Phase 3, reduced; written before any empirical run).**
+  Nothing is tuned: all methods use the frozen settings (PEA per model, ESM-2 layer 4, centering).
+  - Data: RecA and RpsC (rpsC) from UniProt reference proteomes (KW-1185), reviewed entries only,
+    organisms with both proteins. 7 NCBI phyla × 6 species = 42 (Pseudomonadota, Bacillota,
+    Actinomycetota, Cyanobacteriota, Spirochaetota, Chlamydiota, Campylobacterota); species chosen
+    by a deterministic rule (round-robin over classes, then orders, lowest taxid; one strain per
+    species; `workflow/scripts/select_empirical.py`), list + taxonomy + accessions + UniProt
+    release in `data/empirical/species.tsv`. Mycoplasmatota excluded although they had enough
+    species: they nest inside Bacillota, so a correct tree would make Bacillota non-monophyletic,
+    and their branches are very long.
+  - Methods: PEA and mean-pool (one-hot, ESM-2), msaresid on MAFFT, IQ-TREE ML (LG+G4) and BIONJ
+    on MAFFT, 3-mer. (No TRUE alignment exists → no msaresid TRUE.)
+  - Reference 1 — taxonomic monophyly (primary): every NCBI group at rank phylum, class, order with
+    ≥ 2 species in the set and ≥ 2 outside it. A group is recovered if its species form one side of
+    a split of the (unrooted) tree. Report per tree: fraction recovered per rank and over all ranks
+    (identical species sets at several ranks counted once in the all-ranks total), with and without
+    the Chlamydiota groups; plus a group × method table (recovered yes/no). The reference ML tree's
+    own monophyly is reported as context, not as a method.
+  - Reference 2 — supported ML splits (secondary): IQ-TREE `-m MFP -B 1000` on the MAFFT
+    alignment; only splits with UFBoot ≥ 95. Metric: fraction of these splits missing from the
+    method's tree (one-sided, because the reference is only partly resolved), plus their count.
+    Caveat: ML and BIONJ use the same alignment and program as this reference and are favoured.
+  - Robustness (descriptive, no tests): 200 replicates, each drawing 4 species per phylum
+    (numpy rng seeded with `config.seed`; the same subsets for every method and family). Trees are
+    NOT rebuilt: the already inferred trees are pruned to the subset (splits restricted to it),
+    and the all-ranks recovered fraction is recomputed with the same group rule (≥ 2 inside,
+    ≥ 2 outside the subset). Report mean and 2.5–97.5 % percentile interval per method.
+  - Limitations to report: NCBI taxonomy (e.g. Bacillota incl. Clostridia, split in GTDB) is not
+    a phylogeny, so a single-gene tree may legitimately break a group; Chlamydiota = 6 species of
+    one genus (shallow, easy to recover); one gene per tree; ESM-2 was trained on UniRef, so these
+    well-known proteins (or close homologues) were very likely in its training data.
+- 2026-10-07 — **Empirical check result** (`results_empirical/`; frozen settings, nothing tuned).
+  20 eligible groups per family (7 phyla, 11 classes, 7 orders; identical sets counted once).
+  Reference ML models (BIC): RecA Q.YEAST+I+G4, RpsC LG+I+G4; 25 / 21 splits with UFBoot ≥ 95.
+  All-ranks fraction recovered (RecA / RpsC): PEA one-hot 0.90 / 0.95, PEA ESM-2 0.85 / 1.00,
+  msaresid MAFFT one-hot 0.90 / 1.00, ESM-2 0.85 / 0.90, ML 0.90 / 0.95 (= reference ML tree),
+  BIONJ 0.85 / 0.90, 3-mer 0.70 / 1.00, mean-pool 0.15–0.30 / 0.45–0.50. Without Chlamydiota the
+  ordering is unchanged. Supported ML splits missed: PEA 1–2 of 21–25 (4–8 %), mean-pool 48–72 %.
+  Robustness (200 × 4 species per phylum): intervals of PEA, msaresid, ML and BIONJ overlap
+  (e.g. RecA 0.81–0.89 means). — Interpretation: with frozen settings PEA recovers taxonomy as
+  well as the MSA-based methods on these two families; mean-pool fails, as on simulations. The
+  differences between the good methods are 1–2 groups, i.e. within noise. Spirochaetota is not
+  monophyletic in ANY RecA tree, including the reference ML tree — a gene-tree / taxonomy
+  conflict, not a method error. In RecA, ESM-2 (PEA and msaresid alike) loses Actinomycetota and
+  Bacillota while one-hot keeps them, so that loss comes from the representation, not from PEA's
+  alignment step.

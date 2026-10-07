@@ -26,12 +26,12 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · (H) = needs the human
 - [ ] Check: no NaN, negative-branch counts in `logs/nj/`, runtimes plausible
 - [ ] Read `results/stats/tests.tsv`: H1, H1b, distance to MSA upper bound
 
-## Phase 3 — empirical microbial check (08.10–10.10)
-- [ ] Pick ≥ 3 bacterial marker families (e.g. GTDB bac120: RpL2, RpS3, RecA/GyrB), 30–60 genomes
+## Phase 3 — empirical microbial check (08.10–10.10) — done in reduced form (RecA, RpsC; 7 phyla × 6)
+- [~] Pick ≥ 3 bacterial marker families (2 done: RecA, RpsC) (e.g. GTDB bac120: RpL2, RpS3, RecA/GyrB), 30–60 genomes
       spanning several phyla → `data/empirical/<family>.fa`
-- [ ] Reference 1: GTDB taxonomy — fraction of genera/families recovered as monophyletic
-- [ ] Reference 2: IQ-TREE ML (MFP, UFBoot 1000) — compare only splits with UFBoot ≥ 95
-- [ ] Generalise Snakefile to empirical datasets (reference ≠ true tree)
+- [x] Reference 1 (NCBI taxonomy instead of GTDB; phylum/class/order) — was: GTDB taxonomy — fraction of genera/families recovered as monophyletic
+- [x] Reference 2: IQ-TREE ML (MFP, UFBoot 1000) — compare only splits with UFBoot ≥ 95
+- [x] Generalise Snakefile to empirical datasets (`workflow/empirical.smk`) (reference ≠ true tree)
 
 ## Phase 4 — write-up (11.10–13.10)
 - [ ] Final figures (pdf) + captions understandable without the speaker
