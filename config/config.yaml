@@ -25,13 +25,13 @@ sim:
 embedding:
   # "onehot" is a mandatory CONTROL: PEA/msaresid with one-hot == classical identity distance.
   models: ["onehot", "esm2_t12_35M_UR50D"]
-  layer: -1                                   # -1 = last layer (ESM models; onehot has none)
+  layer: 4                                    # tuned (tuning grid {4,6,8,12}); -1 = last layer; onehot has none
   device: auto                                # auto | cpu | cuda
   # subtract the dataset mean residue vector before normalising (anisotropy); applies to ALL
   # embedding methods of that model (meanpool, msaresid, pea). Missing model = false.
-  center:
-    onehot: false
-    esm2_t12_35M_UR50D: false
+  center:                                     # tuned on the tuning grid (docs/decisions.md)
+    onehot: true
+    esm2_t12_35M_UR50D: true
 
 # --- method parameters ---------------------------------------------------------
 pea:
@@ -43,6 +43,18 @@ pea:
     zscore: true          # EBA-style signal enhancement of the similarity matrix
     free_end_gaps: true
     gap_weight: 0.0       # weight of the unmatched-residue fraction added to the distance
+  onehot:                 # tuned: mean nRF 0.200 on the tuning grid (defaults: 0.332)
+    gap_open: 2.0
+    gap_extend: 0.25
+    zscore: false
+    free_end_gaps: false
+    gap_weight: 0.5
+  esm2_t12_35M_UR50D:     # tuned (layer 4, centered): mean nRF 0.209 (defaults, last layer: 0.342)
+    gap_open: 4.0
+    gap_extend: 0.25
+    zscore: true
+    free_end_gaps: true
+    gap_weight: 0.0
 
 meanpool:
   metric: cosine

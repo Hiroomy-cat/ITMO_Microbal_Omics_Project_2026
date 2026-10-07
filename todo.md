@@ -12,11 +12,13 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · (H) = needs the human
 - [ ] Check ESM-2 35M embedding on CPU for one dataset (time, memory); decide on GPU/Colab
 
 ## Phase 1 — tuning, NOT on the test set (02.10–04.10)
-- [ ] Add a `tuning` grid to the Snakefile: same generator, seeds offset by `sim.tuning_seed_offset`,
-      output under `results_tuning/` (keep test outputs untouched)
-- [ ] Grid-search PEA on tuning set: gap_open ∈ {1,2,4}, gap_extend ∈ {0.25,0.5,1},
-      zscore ∈ {T,F}, free_end_gaps ∈ {T,F}, gap_weight ∈ {0,0.5,1}; ESM-2 layer ∈ {mid, last}
-- [ ] Freeze best settings in `config.yaml`; log them in `docs/decisions.md`
+- [x] Add a `tuning` grid (`workflow/tuning.smk`): same generator, seeds offset by `sim.tuning_seed_offset`,
+      output under `data_tuning/`, `results_tuning/` (keep test outputs untouched)
+- [x] Grid-search PEA on tuning set: gap_open ∈ {1,2,4}, gap_extend ∈ {0.25,0.5,1},
+      zscore ∈ {T,F}, free_end_gaps ∈ {T,F}, gap_weight ∈ {0,0.5,1}, centering ∈ {T,F};
+      ESM-2 layer ∈ {4,6,8,12}
+- [x] Freeze best settings in `config.yaml`; log them in `docs/decisions.md`
+- [x] Recompute embedding-based methods on the main grid with the frozen settings
 
 ## Phase 2 — main simulation benchmark (05.10–08.10)
 - [ ] Full grid: n ∈ {16, 32}, height ∈ {0.25…4}, 20 reps (→ 50 if time allows)

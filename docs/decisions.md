@@ -41,3 +41,18 @@ Format: date — decision — why.
   ties → mean nQD → fewest changes from the current defaults. Layer and centering are properties
   of the embedding, so the chosen values are applied to every method of that model (meanpool,
   msaresid, pea), not only to PEA.
+- 2026-10-06 — **Frozen tuned settings** (tuning grid, 50 datasets, 1080 settings; mean nRF;
+  `results_tuning/pea_grid_summary.tsv`, `pea_best.tsv`). Unique winners, no ties:
+  - ESM-2 35M: **layer 4, centered**, gap_open 4, gap_extend 0.25, zscore, free end gaps,
+    gap_weight 0 → nRF 0.209 (untuned defaults, last layer: 0.342).
+  - one-hot: **centered**, gap_open 2, gap_extend 0.25, no zscore, global ends, gap_weight 0.5 →
+    nRF 0.200 (defaults: 0.332).
+  Applied per protocol: layer 4 and centering to all ESM-2 methods; centering to all one-hot
+  methods (meanpool, msaresid, pea). —
+  Observations: (1) the layer is the dominant ESM-2 factor (best nRF per layer: 4: 0.209,
+  6: 0.262, 12: 0.282, 8: 0.360); (2) centering helps ESM-2 at every layer (−0.006 to −0.030),
+  consistent with the anisotropy hypothesis but a smaller effect than the layer; (3) centering
+  also helps one-hot (−0.010), against our expectation; (4) the top settings of each model lie
+  within ~0.01 nRF of each other, so the exact winner is partly selection noise; (5) layer 4 is
+  the lower edge of the tested range, so earlier layers might be better still — **not** explored,
+  to avoid open-ended tuning (limitation); (6) on the tuning set tuned ESM-2 ≈ tuned one-hot.
