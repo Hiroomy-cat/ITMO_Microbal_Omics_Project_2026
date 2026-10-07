@@ -88,32 +88,74 @@ def boot_ci(v, n=2000, rng=np.random.default_rng(0)):
     return np.percentile(bs, [2.5, 97.5])
 
 
+# --- fig1 style: colour = model (validated blue/orange pair), PEA bright & thick, other PLM
+# methods = muted tints of the model hue, classical methods = black/greys; method also gets its own
+# line style + marker so identity never rests on colour alone. No colour is used twice.
+MODEL_COLOR = {"esm2_t12_35M_UR50D": "#2a78d6", "onehot": "#eb6834"}
+MODEL_TINTS = {"esm2_t12_35M_UR50D": {"msaresid_true": "#1f528f", "msaresid_mafft": "#74a6e3",
+                                      "meanpool": "#9ec1ea"},
+               "onehot": {"msaresid_true": "#9d4726", "msaresid_mafft": "#f19c7a", "meanpool": "#f4b9a1"}}
+MODEL_LABEL = {"esm2_t12_35M_UR50D": "ESM-2 35M", "onehot": "one-hot"}
+CLASSIC = {"ml": ("#0b0b0b", "-", "^"), "bionj": ("#52514e", "--", "v"), "kmer": ("#898781", ":", "P")}
+METHOD_STYLE = {"pea": ("-", "o"), "msaresid_true": ("--", "s"), "msaresid_mafft": ("-.", "D"),
+                "meanpool": (":", "X")}
+SHORT = {"pea": "PEA (no MSA)", "meanpool": "mean-pool (no MSA)", "msaresid_true": "residue dist., TRUE MSA",
+         "msaresid_mafft": "residue dist., MAFFT", "ml": "IQ-TREE ML (MAFFT)", "bionj": "BIONJ (MAFFT)",
+         "kmer": "3-mer cosine (no MSA)"}
+# legend columns (filled column-wise): MSA-free PLM | MSA-based PLM | classical
+LEGEND_ORDER = [("pea", "esm2_t12_35M_UR50D"), ("pea", "onehot"), ("meanpool", "esm2_t12_35M_UR50D"),
+                ("meanpool", "onehot"), ("msaresid_true", "esm2_t12_35M_UR50D"), ("msaresid_true", "onehot"),
+                ("msaresid_mafft", "esm2_t12_35M_UR50D"), ("msaresid_mafft", "onehot"),
+                ("ml", "none"), ("bionj", "none"), ("kmer", "none")]
+
+
+def series_style(method, model):
+    """(colour, linestyle, marker, linewidth, label, zorder) for one method x model series."""
+    if model == "none":
+        c, ls, mk = CLASSIC[method]
+        return c, ls, mk, 1.3, SHORT[method], 3
+    ls, mk = METHOD_STYLE[method]
+    lab = f"{SHORT[method]}, {MODEL_LABEL.get(model, model)}"
+    if method == "pea":
+        return MODEL_COLOR[model], ls, mk, 2.8, lab, 5
+    return MODEL_TINTS[model][method], ls, mk, 1.2, lab, 2
+
+
 def fig_accuracy(df, metric, out):
     ns = sorted(df.n_taxa.unique())
-    fig, axes = plt.subplots(1, len(ns), figsize=(3.4 * len(ns), 3.0), sharey=True, squeeze=False)
-    cmap = plt.get_cmap("tab10")
-    mm = [m for m in df.method_model.unique()]
-    mm.sort(key=lambda s: (ORDER.index(s.split("__")[0]) if s.split("__")[0] in ORDER else 99, s))
+    fig, axes = plt.subplots(1, len(ns), figsize=(3.6 * len(ns), 4.4), sharey=True, squeeze=False)
+    present = set(zip(df.method, df.model))
+    keys = [k for k in LEGEND_ORDER if k in present]
     for ax, n in zip(axes[0], ns):
         d = df[df.n_taxa == n]
-        for k, key in enumerate(mm):
-            g = d[d.method_model == key].groupby("height")[metric]
+        for me, mo in keys:
+            g = d[(d.method == me) & (d.model == mo)].groupby("height")[metric]
             hs = np.array(sorted(g.groups))
             mu = np.array([g.get_group(h).mean() for h in hs])
-            ci = np.array([boot_ci(g.get_group(h).values) for h in hs])
-            me, mo = key.split("__")
-            lab = LABEL.get(me, me) + ("" if mo == "none" else f" [{mo}]")
-            ls = "-" if me == "pea" else ("--" if mo == "none" else ":")
-            lw = 2.2 if me == "pea" else 1.2
-            ax.plot(hs, mu, ls, marker="o", ms=3, lw=lw, color=cmap(k % 10), label=lab)
-            ax.fill_between(hs, ci[:, 0], ci[:, 1], color=cmap(k % 10), alpha=0.12, lw=0)
+            c, ls, mk, lw, lab, z = series_style(me, mo)
+            ax.plot(hs, mu, ls=ls, marker=mk, ms=4 if me == "pea" else 3.5, lw=lw, color=c, label=lab,
+                    zorder=z, markeredgecolor="white" if me == "pea" else c, markeredgewidth=0.6)
+            if me == "pea":  # CI band only for the method under test, to keep the panel readable
+                ci = np.array([boot_ci(g.get_group(h).values) for h in hs])
+                ax.fill_between(hs, ci[:, 0], ci[:, 1], color=c, alpha=0.15, lw=0, zorder=1)
         ax.set_xscale("log", base=2)
-        ax.set_xlabel("Mean root-to-tip distance (subs/site)")
+        ax.set_xticks(sorted(d.height.unique()))
+        ax.set_xticklabels([f"{h:g}" for h in sorted(d.height.unique())])
+        ax.minorticks_off()
+        ax.grid(axis="y", color="#e1e0d9", lw=0.6)
+        ax.set_axisbelow(True)
         ax.set_title(f"{n} taxa")
     axes[0, 0].set_ylabel({"nRF": "Normalised RF distance to true tree",
                            "nQD": "Normalised quartet distance"}[metric])
-    axes[0, -1].legend(fontsize=7, frameon=False, bbox_to_anchor=(1.02, 1), loc="upper left")
-    fig.tight_layout()
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    if len(handles) == 11:  # 4 rows x 3 columns: pad the classical column
+        handles.append(plt.Line2D([], [], alpha=0))
+        labels.append("")
+    # layout from the bottom up: legend, then the single shared x label, then the panels
+    fig.subplots_adjust(left=0.08, right=0.99, top=0.92, bottom=0.34, wspace=0.08)
+    fig.supxlabel("Mean root-to-tip distance (subs/site, log scale)", fontsize=9, y=0.245)
+    fig.legend(handles, labels, loc="lower center", ncol=3, fontsize=7, frameon=False,
+               bbox_to_anchor=(0.5, 0.0), columnspacing=1.5, handlelength=3.2)
     for ext in ("pdf", "png"):
         fig.savefig(f"{out}.{ext}", bbox_inches="tight")
     plt.close(fig)
@@ -141,16 +183,41 @@ def fig_paired(df, metric, out):
     plt.close(fig)
 
 
+# fig3: short point labels; offsets (points) chosen so labels in the two dense clusters do not overlap
+SHORT_TAG = {"pea": "PEA", "meanpool": "MP", "msaresid_true": "TRUE", "msaresid_mafft": "MAFFT",
+             "ml": "ML", "bionj": "BIONJ", "kmer": "3-mer"}
+MODEL_TAG = {"esm2_t12_35M_UR50D": "ESM", "onehot": "1hot"}
+TAG_OFFSET = {("pea", "onehot"): (-4, -16), ("msaresid_mafft", "onehot"): (10, 10),
+              ("msaresid_true", "onehot"): (-30, 12), ("meanpool", "onehot"): (7, 3),
+              ("pea", "esm2_t12_35M_UR50D"): (14, 14), ("msaresid_mafft", "esm2_t12_35M_UR50D"): (-44, 16),
+              ("msaresid_true", "esm2_t12_35M_UR50D"): (8, -14), ("meanpool", "esm2_t12_35M_UR50D"): (7, 3),
+              ("ml", "none"): (-30, -12), ("bionj", "none"): (-38, 4), ("kmer", "none"): (6, 5)}
+
+
 def fig_runtime(df, metric, out):
-    g = df.groupby("method_model").agg(acc=(metric, "mean"), sec=("seconds", "median")).reset_index()
-    fig, ax = plt.subplots(figsize=(4.2, 3.0))
-    ax.scatter(g.sec, g.acc)
-    for _, r in g.iterrows():
-        ax.annotate(r.method_model.replace("__none", ""), (r.sec, r.acc), fontsize=6, xytext=(3, 3),
-                    textcoords="offset points")
+    g = df.groupby(["method", "model"]).agg(acc=(metric, "mean"), sec=("seconds", "median")).reset_index()
+    fig, ax = plt.subplots(figsize=(4.8, 3.6))
+    for r in g.itertuples():
+        c, _, mk, _, _, z = series_style(r.method, r.model)
+        big = r.method == "pea"
+        ax.scatter(r.sec, r.acc, s=60 if big else 32, marker=mk, color=c, edgecolor="white",
+                   linewidth=0.7, zorder=3 if big else 4)  # big PEA marker below, so close points stay visible
+        tag = SHORT_TAG[r.method] + ("" if r.model == "none" else "-" + MODEL_TAG.get(r.model, r.model))
+        dx, dy = TAG_OFFSET.get((r.method, r.model), (6, 4))
+        far = abs(dx) > 9 or abs(dy) > 9
+        ax.annotate(tag, (r.sec, r.acc), xytext=(dx, dy), textcoords="offset points", fontsize=7,
+                    fontweight="bold" if big else "normal", color="#0b0b0b" if big else "#52514e",
+                    ha="left", va="center",
+                    arrowprops=dict(arrowstyle="-", color="#898781", lw=0.5, shrinkA=0, shrinkB=4) if far else None)
     ax.set_xscale("log")
-    ax.set_xlabel("Median wall-clock per dataset, s (log)")
-    ax.set_ylabel(f"Mean {metric}")
+    ax.set_ylim(min(0.16, g.acc.min() - 0.04), None)  # room for labels under the lowest points
+    ax.grid(color="#e1e0d9", lw=0.6)
+    ax.set_axisbelow(True)
+    ax.set_xlabel("Median wall-clock per dataset, s (log scale)")
+    ax.set_ylabel(f"Mean {metric} (lower = better)")
+    fig.text(0.01, -0.02, "PEA = pairwise embedding alignment, MP = mean-pool, TRUE / MAFFT = residue distance on "
+             "the TRUE / MAFFT MSA;\nESM = ESM-2 35M, 1hot = one-hot. Colour = embedding model as in Fig. 1, "
+             "black/grey = classical methods.", fontsize=6, color="#52514e", va="top")
     fig.tight_layout()
     for ext in ("pdf", "png"):
         fig.savefig(f"{out}.{ext}", bbox_inches="tight")
