@@ -101,27 +101,33 @@ rule embed:
 
 
 # ----------------------------------------------------------------------------- distances
-P = config["pea"]
+def center_flag(w):
+    return "--center" if config["embedding"].get("center", {}).get(w.model, False) else ""
+
+
+def pea_args(w):
+    p = config["pea"].get(w.model, config["pea"]["default"])
+    return (f"--gap-open {p['gap_open']} --gap-extend {p['gap_extend']} --gap-weight {p['gap_weight']}"
+            + ("" if p["zscore"] else " --no-zscore") + ("" if p["free_end_gaps"] else " --global-ends"))
+
 
 rule dist_pea:
     input: "data/emb/{ds}/{model}.npz"
     output: "results/dist/{ds}/pea__{model}.tsv"
     benchmark: "benchmarks/{ds}/dist_pea__{model}.tsv"
-    params:
-        flags=("" if P["zscore"] else "--no-zscore ") + ("" if P["free_end_gaps"] else "--global-ends"),
+    params: args=pea_args, center=center_flag
     shell:
-        "python {SCRIPTS}/dist_emb.py --emb {input} --method pea "
-        "--gap-open {P[gap_open]} --gap-extend {P[gap_extend]} --gap-weight {P[gap_weight]} "
-        "{params.flags} --out {output}"
+        "python {SCRIPTS}/dist_emb.py --emb {input} --method pea {params.args} {params.center} --out {output}"
 
 
 rule dist_meanpool:
     input: "data/emb/{ds}/{model}.npz"
     output: "results/dist/{ds}/meanpool__{model}.tsv"
     benchmark: "benchmarks/{ds}/dist_meanpool__{model}.tsv"
+    params: center=center_flag
     shell:
         "python {SCRIPTS}/dist_emb.py --emb {input} --method meanpool "
-        "--metric {config[meanpool][metric]} --out {output}"
+        "--metric {config[meanpool][metric]} {params.center} --out {output}"
 
 
 rule dist_msaresid:
@@ -131,9 +137,10 @@ rule dist_msaresid:
     output: "results/dist/{ds}/msaresid_{aln}__{model}.tsv"
     wildcard_constraints: aln="true|mafft"
     benchmark: "benchmarks/{ds}/dist_msaresid_{aln}__{model}.tsv"
+    params: center=center_flag
     shell:
         "python {SCRIPTS}/dist_emb.py --emb {input.emb} --method msaresid "
-        "--aln {input.aln} --out {output}"
+        "--aln {input.aln} {params.center} --out {output}"
 
 
 rule dist_kmer:

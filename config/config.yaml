@@ -25,16 +25,24 @@ sim:
 embedding:
   # "onehot" is a mandatory CONTROL: PEA/msaresid with one-hot == classical identity distance.
   models: ["onehot", "esm2_t12_35M_UR50D"]
-  layer: -1                                   # -1 = last layer
+  layer: -1                                   # -1 = last layer (ESM models; onehot has none)
   device: auto                                # auto | cpu | cuda
+  # subtract the dataset mean residue vector before normalising (anisotropy); applies to ALL
+  # embedding methods of that model (meanpool, msaresid, pea). Missing model = false.
+  center:
+    onehot: false
+    esm2_t12_35M_UR50D: false
 
 # --- method parameters ---------------------------------------------------------
 pea:
-  gap_open: 2.0
-  gap_extend: 0.5
-  zscore: true            # EBA-style signal enhancement of the similarity matrix
-  free_end_gaps: true
-  gap_weight: 0.0         # weight of the unmatched-residue fraction added to the distance
+  # per-model settings are chosen on the TUNING grid (workflow/tuning.smk) and frozen here;
+  # a model without its own entry uses `default`.
+  default:
+    gap_open: 2.0
+    gap_extend: 0.5
+    zscore: true          # EBA-style signal enhancement of the similarity matrix
+    free_end_gaps: true
+    gap_weight: 0.0       # weight of the unmatched-residue fraction added to the distance
 
 meanpool:
   metric: cosine
@@ -45,6 +53,19 @@ kmer:
 iqtree:
   model: "LG+G4"          # matches the simulating model family (favours ML = fair upper bound)
   extra: "-T 1 -keep-ident"   # keep identical seqs: otherwise .bionj drops them (low divergence)
+
+# --- PEA tuning grid (workflow/tuning.smk; seeds offset by sim.tuning_seed_offset) ---------
+tuning:
+  replicates: 5                               # per (n_taxa, height) cell -> 50 datasets
+  layers:
+    esm2_t12_35M_UR50D: [4, 6, 8, 12]         # 12 = last
+  grid:
+    center: [true, false]
+    gap_open: [1.0, 2.0, 4.0]
+    gap_extend: [0.25, 0.5, 1.0]
+    zscore: [true, false]
+    free_end_gaps: [true, false]
+    gap_weight: [0.0, 0.5, 1.0]
 
 compare:
   quartets: true          # normalised quartet distance (slow for n > 40)

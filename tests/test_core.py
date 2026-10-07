@@ -52,3 +52,44 @@ def test_pea_identity_and_indel():
     d_ins, m_ins = pea_pair(U1, U2)
     assert d_ins < 0.02, d_ins            # insertion must be absorbed by a gap, not by mismatches
     assert m_ins >= len(s1) - 2
+
+
+def test_center_removes_dataset_mean():
+    from dist_emb import center
+    rng = np.random.default_rng(0)
+    emb = {"a": rng.normal(5, 1, (30, 8)), "b": rng.normal(5, 1, (40, 8))}
+    C = center(emb, ["a", "b"])
+    assert np.allclose(np.concatenate([C["a"], C["b"]]).mean(0), 0, atol=1e-5)
+    assert C["a"].shape == (30, 8) and C["b"].shape == (40, 8)
+
+
+def test_tune_pea_matches_pipeline(tmp_path):
+    """One grid point of tune_pea.py == dist_emb.py --method pea -> write_dist -> nj.py -> nRF."""
+    from common import read_dist, write_dist
+    from dist_emb import center, dist_pea
+    from tune_pea import grid_rows
+
+    rng = np.random.default_rng(1)
+    base = "".join(rng.choice(list("ACDEFGHIKLMNPQRSTVWY"), 60))
+    seqs = {}
+    for i in range(6):
+        s = list(base)
+        for p in rng.choice(60, 6 + 3 * i, replace=False):
+            s[p] = rng.choice(list("ACDEFGHIKLMNPQRSTVWY"))
+        seqs[f"t{i + 1}"] = "".join(s)[: 55 + i]
+    emb = embed_onehot(seqs)
+    names = sorted(emb)
+    ref = "((t1,t2),(t3,t4),(t5,t6));"
+    grid = dict(center=[True, False], gap_open=[1.0, 4.0], gap_extend=[0.5], zscore=[True, False],
+                free_end_gaps=[False], gap_weight=[0.0, 1.0])
+    rows = list(grid_rows(emb, names, ref, grid))
+    assert len(rows) == 16
+    for r in rows:
+        e = center(emb, names) if r["center"] else emb
+        D = dist_pea(e, names, go=r["gap_open"], ge=r["gap_extend"], zscore=r["zscore"],
+                     free_end=r["free_end_gaps"], gap_weight=r["gap_weight"])
+        f = tmp_path / "d.tsv"
+        write_dist(names, D, str(f))
+        nwk, _ = neighbor_joining(*read_dist(str(f)))
+        assert nwk == r["newick"]
+        assert normalized_rf(ref, nwk) == r["nRF"]

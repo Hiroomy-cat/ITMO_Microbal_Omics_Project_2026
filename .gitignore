@@ -9,3 +9,7 @@ __pycache__/
 *.ckp.gz
 # keep final figures/tables for the defence by force-adding them:
 #   git add -f results/figures/*.pdf results/stats/tests.tsv results/summary.tsv
+data_tuning/
+results_tuning/
+benchmarks_tuning/
+logs_tuning/

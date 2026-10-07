@@ -12,6 +12,9 @@ Methods
              z-score "signal enhancement", as in EBA, Pantolini et al. 2024) -> affine-gap
              global/semi-global DP alignment -> distance = mean (1 - cos) over matched
              residue pairs + gap_weight * unmatched fraction.
+
+Option --center (all methods): subtract the mean residue vector of the dataset (all residues of
+all sequences) before L2 normalisation, against anisotropy of PLM embeddings (docs/decisions.md).
 """
 import argparse
 import itertools
@@ -34,6 +37,12 @@ def _unit(E):
     n = np.linalg.norm(E, axis=1, keepdims=True)
     n[n == 0] = 1.0
     return E / n
+
+
+def center(emb, names):
+    """Subtract the mean vector over all residues of all sequences of the dataset."""
+    mu = np.concatenate([emb[k].astype(np.float64) for k in names]).mean(axis=0)
+    return {k: (emb[k].astype(np.float64) - mu).astype(np.float32) for k in names}
 
 
 # ----------------------------------------------------------------------------- meanpool
@@ -191,11 +200,14 @@ def main():
     ap.add_argument("--no-zscore", action="store_true")
     ap.add_argument("--global-ends", action="store_true", help="penalise terminal gaps")
     ap.add_argument("--gap-weight", type=float, default=0.0)
+    ap.add_argument("--center", action="store_true", help="subtract the dataset mean residue vector")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
     emb = dict(np.load(a.emb))
     names = sorted(emb)
+    if a.center:
+        emb = center(emb, names)
     if a.method == "meanpool":
         D = dist_meanpool(emb, names, a.metric)
     elif a.method == "msaresid":
